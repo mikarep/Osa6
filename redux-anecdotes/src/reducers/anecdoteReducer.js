@@ -1,3 +1,6 @@
+import { createSlice } from '@reduxjs/toolkit'
+import anecdotes from '../services/anecdotes'
+
 const anecdotesAtStart = [
   'If it hurts, do it more often',
   'Adding manpower to a late software project makes it later!',
@@ -19,11 +22,88 @@ const asObject = (anecdote) => {
 
 const initialState = anecdotesAtStart.map(asObject)
 
-const reducer = (state = initialState, action) => {
+/*const reducer = (state = initialState, action) => {
   console.log('state now: ', state)
   console.log('action', action)
-
-  return state
+  switch(action.type) {
+    case 'VOTE':
+      const id = action.payload.id
+      const anecdotesToChange = state.find(n => n.id === id)
+      const changedAnecdotese = { 
+        ...anecdotesToChange, 
+        votes: anecdotesToChange.votes + 1 
+      }
+      return state.map(anecdotes =>
+        anecdotes.id !== id ? anecdotes : changedAnecdotese 
+      )
+    case 'NEW':
+      return state.concat(action.payload)
+    default:
+      return state
+  }
 }
 
-export default reducer
+export const createAnecdote = (anecdote) => {
+  return {
+    type: 'NEW',
+    payload: {
+      content: anecdote,
+      id: getId(),
+      votes: 0
+    }
+  }
+}
+
+export const voteAnecdotes = (id) => {
+  return {
+    type: 'VOTE',
+    payload: { id }
+  }
+}*/
+
+const anecdoteSlice = createSlice({
+  name: 'anecdote',
+  initialState: [],
+  reducers: {
+    voteAnecdotes: (state, action) => {
+      const id = action.payload.id
+      
+      const changedAnecdotese = action.payload
+      
+      return state.map(anecdotes =>
+        anecdotes.id !== id ? anecdotes : changedAnecdotese 
+      )
+    },
+    appendAnecdote: (state, action) => {
+      state.push(action.payload)
+    },
+    setAnecdotes: (state, action) => {
+      return action.payload
+    }
+  }
+})
+
+export const { voteAnecdotes, appendAnecdote, setAnecdotes} = anecdoteSlice.actions
+
+export const initializeNotes = () => {
+  return async dispatch => {
+    const anecdote = await anecdotes.getAll()
+    dispatch(setAnecdotes(anecdote))
+  }
+}
+
+export const createAnecdote = content => {
+  return async dispatch => {
+    const newAnecdote = await anecdotes.createNew(content)
+    dispatch(appendAnecdote(newAnecdote))
+  }
+}
+
+export const updateAnecdote = content => {
+  return async dispatch => {
+    const updatedAnecdote = await anecdotes.updateAnecdote(content)
+    dispatch(voteAnecdotes(updatedAnecdote))
+  }
+}
+
+export default anecdoteSlice.reducer
